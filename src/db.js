@@ -2,9 +2,13 @@ export const DB = {
   _users: [],
   setUser: function (user) {
     this._users.push(user);
+    console.log("CHECK DB: ", this._users);
+  },
+  getUser: function (id) {
+    return this._users.find((el) => el.id === id);
   },
   _rooms: [],
-  setroom: function (room) {
+  setRoom: function (room) {
     this._rooms.push(room);
   },
   getFreeRooms: function () {

@@ -1,17 +1,15 @@
 import { turnIntoJson } from "../helpers.js";
 import { DB } from "../db.js";
-import { generateId } from "../helpers.js";
 
-export const registerUser = function (ws, data) {
+export const registerUser = function (ws, data, index) {
   try {
     const dataUser = JSON.parse(data.data);
-    const indexUser = generateId();
 
     const dataToSend = {
       type: data.type,
       data: {
         name: dataUser.name,
-        index: indexUser,
+        index,
         error: false,
         errorText: "ok",
       },
@@ -21,7 +19,7 @@ export const registerUser = function (ws, data) {
     ws.send(turnIntoJson(dataToSend));
 
     DB.setUser({
-      id: indexUser,
+      id: index,
       name: dataUser.name,
       password: dataUser.password,
     });

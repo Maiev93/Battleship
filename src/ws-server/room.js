@@ -20,9 +20,22 @@ import { DB } from "../db.js";
 import { turnIntoJson } from "../helpers.js";
 import { generateId } from "../helpers.js";
 
-export const createRoom = function (ws) {
+export const createRoom = function (ws, id) {
   try {
-    DB.setroom();
+    const user = DB.getUser(id);
+    console.log("USER: ", user);
+    const room = {
+      roomId: generateId(),
+      roomUsers: [
+        {
+          name: user.name,
+          index: id,
+        },
+      ],
+    };
+    console.log("ROOM: ", room);
+    DB.setRoom(room);
+    updateRoom(ws);
   } catch (error) {
     console.error(error);
   }
