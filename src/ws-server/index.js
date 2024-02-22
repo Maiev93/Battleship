@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import { registerUser } from "./auth.js";
-import { updateRoom, createRoom } from "./room.js";
+import { updateRoom, createRoom, addUser } from "./room.js";
 import { updateWinners } from "./winners.js";
 import { generateId } from "../helpers.js";
 
@@ -8,15 +8,18 @@ export const websocket = new WebSocketServer({
   port: 3000,
 });
 
+const clients = [];
+
 websocket.on("connection", function connection(ws) {
   ws.on("error", console.error);
 
-  let myId = 0;
+  const myId = generateId();
+  clients.push({ [myId]: ws });
+
   ws.on("message", function message(data) {
     const dataParsed = JSON.parse(data);
     switch (dataParsed.type) {
       case "reg":
-        myId = generateId();
         registerUser(ws, dataParsed, myId);
         updateRoom(ws);
         updateWinners(ws);
@@ -25,7 +28,7 @@ websocket.on("connection", function connection(ws) {
         createRoom(ws, myId);
         break;
       case "add_user_to_room":
-        addUser(ws, myId);
+        addUser(ws, dataParsed, myId);
         break;
 
       default:

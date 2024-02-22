@@ -22,8 +22,8 @@ export const registerUser = function (ws, data, index) {
       id: index,
       name: dataUser.name,
       password: dataUser.password,
+      ws,
     });
-    console.log("IN AUTH", turnIntoJson(dataToSend));
   } catch (error) {
     const dataToSend = {
       type: data.type,
