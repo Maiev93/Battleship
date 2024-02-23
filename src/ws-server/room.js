@@ -1,30 +1,18 @@
-// {
-//     type: "create_room",
-//     data: "",
-//     id: 0,
-// }
-// data:
-//         [
-//             {
-//                 roomId: <number>,
-//                 roomUsers:
-//                     [
-//                         {
-//                             name: <string>,
-//                             index: <number>,
-//                         }
-//                     ],
-//             },
-//         ],
 import { DB } from "../db.js";
 import { turnIntoJson } from "../helpers.js";
 import { generateId } from "../helpers.js";
 
 export const createRoom = function (ws, id) {
   try {
+    const user = DB.getUser(id);
     const room = {
       roomId: generateId(),
-      roomUsers: [id],
+      roomUsers: [
+        {
+          name: user.name,
+          index: id,
+        },
+      ],
     };
     DB.setRoom(room);
     updateRoom(ws);
@@ -64,7 +52,7 @@ export const addUser = function (ws, dataParsed, userId) {
     }
 
     const enemyUserId = freeRooms.find((el) => el.roomId === roomId)
-      .roomUsers[0];
+      .roomUsers[0].index;
     const enemy = DB.getUser(enemyUserId);
 
     const clients = [

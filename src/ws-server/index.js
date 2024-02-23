@@ -2,6 +2,7 @@ import { WebSocketServer } from "ws";
 import { registerUser } from "./auth.js";
 import { updateRoom, createRoom, addUser } from "./room.js";
 import { updateWinners } from "./winners.js";
+import { addShips } from "./game.js";
 import { generateId } from "../helpers.js";
 
 export const websocket = new WebSocketServer({
@@ -30,7 +31,9 @@ websocket.on("connection", function connection(ws) {
       case "add_user_to_room":
         addUser(ws, dataParsed, myId);
         break;
-
+      case "add_ships":
+        addShips(ws, dataParsed);
+        break;
       default:
         break;
     }
