@@ -18,8 +18,12 @@ export const DB = {
   getFreeRooms: function () {
     return this._rooms;
   },
+
   _winners: [],
   getWinners: function () {
     return this._winners;
+  },
+  setWinner: function (winner) {
+    this._winners.push(winner);
   },
 };

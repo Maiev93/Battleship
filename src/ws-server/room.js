@@ -3,7 +3,7 @@ import { turnIntoJson } from "../helpers.js";
 import { generateId } from "../helpers.js";
 import { websocket } from "../ws-server/index.js";
 
-export const createRoom = function (ws, id) {
+export const createRoom = function (id) {
   try {
     let isUserCreatedRoom = false;
     const freeRooms = DB.getFreeRooms();
@@ -11,7 +11,6 @@ export const createRoom = function (ws, id) {
       const userInRoom = freeRoom.roomUsers.find((user) => user.index === id);
       isUserCreatedRoom = userInRoom ? true : false;
     });
-
     if (isUserCreatedRoom) {
       return;
     }
@@ -55,7 +54,7 @@ export const addUser = function (ws, dataParsed, userId) {
     let userError = "";
     freeRooms.forEach((room) => {
       room.roomUsers.forEach((user) => {
-        userError = user === userId;
+        userError = user.index === userId;
       });
     });
     if (userError) {

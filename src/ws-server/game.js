@@ -1,4 +1,5 @@
 import { turnIntoJson } from "../helpers.js";
+import { setWinner } from "./winners.js";
 
 const games = [];
 let attackedPlayer = 0;
@@ -17,10 +18,10 @@ export const addShips = function (ws, data) {
   if (fulledGame.length > 1) {
     fulledGame.forEach((el) => {
       createGame(el.indexPlayer, el.ships, el.ws);
+
+      sendTurn(el.ws, fulledGame[0].indexPlayer);
     });
   }
-
-  sendTurn(fulledGame);
 };
 
 function createGame(playerId, ships, ws) {
@@ -32,19 +33,17 @@ function createGame(playerId, ships, ws) {
   ws.send(turnIntoJson(dataToSend));
 }
 
-export const sendTurn = function (game, turnId = 0) {
-  game.forEach((el) => {
-    const dataToSend = {
-      type: "turn",
-      data: {
-        currentPlayer: turnId === 0 ? game[0].indexPlayer : turnId,
-      },
-      id: 0,
-    };
-    el.ws.send(turnIntoJson(dataToSend));
-  });
+export const sendTurn = function (ws, turnId) {
+  const dataToSend = {
+    type: "turn",
+    data: {
+      currentPlayer: turnId,
+    },
+    id: 0,
+  };
+  ws.send(turnIntoJson(dataToSend));
 
-  attackedPlayer = turnId === 0 ? game[0].indexPlayer : turnId;
+  attackedPlayer = turnId;
 };
 
 export const attack = function (data) {
@@ -53,12 +52,12 @@ export const attack = function (data) {
   if (attackedPlayer !== indexPlayer) {
     return;
   }
-
-  const coords = parsedData.x
+  const coords = Number.isInteger(parsedData.x)
     ? { x: parsedData.x, y: parsedData.y }
     : { x: randomPoints(), y: randomPoints() };
 
   const gameCurrent = games.filter((el) => el.gameId === gameId);
+  0;
   const enemy = gameCurrent.find((el) => el.indexPlayer !== indexPlayer);
 
   let status = "miss";
@@ -66,7 +65,7 @@ export const attack = function (data) {
     const elIndex = el.position.findIndex(
       (elem) => elem.x === coords.x && elem.y === coords.y
     );
-    if (elIndex != -1) {
+    if (elIndex !== -1) {
       el.position.splice(elIndex, 1);
       status = el.position.length > 0 ? "shot" : "killed";
     }
@@ -83,13 +82,19 @@ export const attack = function (data) {
       id: 0,
     };
     el.ws.send(turnIntoJson(dataToSend));
-  });
 
-  if (status === "miss") {
-    sendTurn(gameCurrent, enemy.indexPlayer);
-  } else {
-    sendTurn(gameCurrent, indexPlayer);
-  }
+    const loserId = checkLoser(el);
+    if (loserId) {
+      finishGame(gameId, loserId);
+      return;
+    }
+
+    if (status === "miss") {
+      sendTurn(el.ws, enemy.indexPlayer);
+    } else {
+      sendTurn(el.ws, indexPlayer);
+    }
+  });
 };
 
 function transformPositions(array) {
@@ -109,7 +114,40 @@ function transformPositions(array) {
 }
 
 function randomPoints() {
-  const min = 0;
-  const max = 9;
-  return Math.floor(Math.random() * (max - min + 1) + min);
+  const cells = 10;
+  return Math.floor(Math.random() * cells);
+}
+
+function checkLoser(game) {
+  let loserId = 0;
+  let shipCount = 0;
+  game.shipsPositions.forEach((el) => {
+    shipCount += el.position.length;
+  });
+
+  if (!shipCount) {
+    loserId = game.indexPlayer;
+  }
+  return loserId;
+}
+
+function finishGame(gameId, loserId) {
+  const gameCurrent = games.filter((el) => el.gameId === gameId);
+  const winPlayer = gameCurrent.find(
+    (el) => el.indexPlayer !== loserId
+  ).indexPlayer;
+
+  const dataToSend = turnIntoJson({
+    type: "finish",
+    data: {
+      winPlayer,
+    },
+    id: 0,
+  });
+
+  setWinner(winPlayer);
+
+  gameCurrent.forEach((el) => {
+    el.ws.send(dataToSend);
+  });
 }

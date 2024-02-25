@@ -26,7 +26,7 @@ websocket.on("connection", function connection(ws) {
         updateWinners(ws);
         break;
       case "create_room":
-        createRoom(ws, myId);
+        createRoom(myId);
         break;
       case "add_user_to_room":
         addUser(ws, dataParsed, myId);
@@ -38,7 +38,9 @@ websocket.on("connection", function connection(ws) {
       case "randomAttack":
         attack(dataParsed);
         break;
-
+      case "single_play":
+        startGame();
+        break;
       default:
         break;
     }
