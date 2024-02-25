@@ -1,9 +1,21 @@
 import { DB } from "../db.js";
 import { turnIntoJson } from "../helpers.js";
 import { generateId } from "../helpers.js";
+import { websocket } from "../ws-server/index.js";
 
 export const createRoom = function (ws, id) {
   try {
+    let isUserCreatedRoom = false;
+    const freeRooms = DB.getFreeRooms();
+    freeRooms.forEach((freeRoom) => {
+      const userInRoom = freeRoom.roomUsers.find((user) => user.index === id);
+      isUserCreatedRoom = userInRoom ? true : false;
+    });
+
+    if (isUserCreatedRoom) {
+      return;
+    }
+
     const user = DB.getUser(id);
     const room = {
       roomId: generateId(),
@@ -15,13 +27,13 @@ export const createRoom = function (ws, id) {
       ],
     };
     DB.setRoom(room);
-    updateRoom(ws);
+    updateRoom();
   } catch (error) {
     console.error(error);
   }
 };
 
-export const updateRoom = function (ws) {
+export const updateRoom = function () {
   try {
     const data = DB.getFreeRooms();
     const dataToSend = {
@@ -29,8 +41,8 @@ export const updateRoom = function (ws) {
       data,
       id: 0,
     };
-
-    ws.send(turnIntoJson(dataToSend));
+    const dataJson = turnIntoJson(dataToSend);
+    websocket.clients.forEach((el) => el.send(dataJson));
   } catch (error) {
     console.error(error);
   }
@@ -60,9 +72,9 @@ export const addUser = function (ws, dataParsed, userId) {
       { id: enemyUserId, ws: enemy.ws },
     ];
 
-    clients.forEach((el) => {
-      updateRoom(el.ws);
+    updateRoom();
 
+    clients.forEach((el) => {
       const dataToSend = {
         type: "create_game",
         data: {

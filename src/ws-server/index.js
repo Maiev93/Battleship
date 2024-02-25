@@ -2,7 +2,7 @@ import { WebSocketServer } from "ws";
 import { registerUser } from "./auth.js";
 import { updateRoom, createRoom, addUser } from "./room.js";
 import { updateWinners } from "./winners.js";
-import { addShips } from "./game.js";
+import { addShips, attack } from "./game.js";
 import { generateId } from "../helpers.js";
 
 export const websocket = new WebSocketServer({
@@ -22,7 +22,7 @@ websocket.on("connection", function connection(ws) {
     switch (dataParsed.type) {
       case "reg":
         registerUser(ws, dataParsed, myId);
-        updateRoom(ws);
+        updateRoom();
         updateWinners(ws);
         break;
       case "create_room":
@@ -34,6 +34,11 @@ websocket.on("connection", function connection(ws) {
       case "add_ships":
         addShips(ws, dataParsed);
         break;
+      case "attack":
+      case "randomAttack":
+        attack(dataParsed);
+        break;
+
       default:
         break;
     }
