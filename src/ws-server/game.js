@@ -52,7 +52,7 @@ export const attack = function (data) {
   if (attackedPlayer !== indexPlayer) {
     return;
   }
-  const coords = Number.isInteger(parsedData.x)
+  let coords = Number.isInteger(parsedData.x)
     ? { x: parsedData.x, y: parsedData.y }
     : { x: randomPoints(), y: randomPoints() };
 
@@ -66,8 +66,12 @@ export const attack = function (data) {
       (elem) => elem.x === coords.x && elem.y === coords.y
     );
     if (elIndex !== -1) {
-      el.position.splice(elIndex, 1);
+      const spliced = el.position.splice(elIndex, 1);
       status = el.position.length > 0 ? "shot" : "killed";
+      // if (status === "killed") {
+      //   console.log("spliced", spliced);
+      //   coords = {};
+      // }
     }
   });
 
@@ -108,7 +112,12 @@ function transformPositions(array) {
         newArr.push({ x: x + index, y });
       }
     }
-    return { position: newArr };
+    return {
+      positionStart: el.position,
+      position: newArr,
+      length: el.length,
+      direction: el.direction,
+    };
   });
   return ships;
 }

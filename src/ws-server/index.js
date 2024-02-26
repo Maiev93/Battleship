@@ -4,21 +4,23 @@ import { updateRoom, createRoom, addUser } from "./room.js";
 import { updateWinners } from "./winners.js";
 import { addShips, attack } from "./game.js";
 import { generateId } from "../helpers.js";
+import { startGame } from "./bot.js";
 
 export const websocket = new WebSocketServer({
   port: 3000,
 });
 
-const clients = [];
-
-websocket.on("connection", function connection(ws) {
+websocket.on("connection", function connection(ws, data) {
   ws.on("error", console.error);
 
+  console.log(" WS parameters: ", data.url);
+
   const myId = generateId();
-  clients.push({ [myId]: ws });
 
   ws.on("message", function message(data) {
     const dataParsed = JSON.parse(data);
+
+    console.log("websocket message: ", dataParsed);
     switch (dataParsed.type) {
       case "reg":
         registerUser(ws, dataParsed, myId);
@@ -39,10 +41,14 @@ websocket.on("connection", function connection(ws) {
         attack(dataParsed);
         break;
       case "single_play":
-        startGame();
+        startGame(ws, myId);
         break;
       default:
         break;
     }
+  });
+
+  ws.on("close", function close() {
+    console.log("User disconnected");
   });
 });
